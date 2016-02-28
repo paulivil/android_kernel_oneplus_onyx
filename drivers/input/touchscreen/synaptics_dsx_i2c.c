@@ -50,7 +50,7 @@
 //#define VENDOR_EDIT
 #define NO_0D_WHILE_2D
 
-//#define REPORT_2D_Z
+#define REPORT_2D_Z
 
 #define REPORT_2D_W
 
@@ -2708,6 +2708,9 @@ static int synaptics_rmi4_f12_abs_report(struct synaptics_rmi4_data *rmi4_data,
 	int wx;
 	int wy;
 	int temp;
+#ifdef REPORT_2D_Z
+    int z;
+#endif
 	struct synaptics_rmi4_f12_extra_data *extra_data;
 	struct synaptics_rmi4_f12_finger_data *data;
 	struct synaptics_rmi4_f12_finger_data *finger_data;
@@ -2821,6 +2824,10 @@ static int synaptics_rmi4_f12_abs_report(struct synaptics_rmi4_data *rmi4_data,
 		if (finger_status) {
 			x = (finger_data->x_msb << 8) | (finger_data->x_lsb);
 			y = (finger_data->y_msb << 8) | (finger_data->y_lsb);
+#ifdef REPORT_2D_Z
+            // The presssure from the sensor is weak, *4
+            z = finger_data->z << 2;
+#endif
 #ifdef REPORT_2D_W
 			wx = finger_data->wx;
 			wy = finger_data->wy;
@@ -2870,6 +2877,10 @@ static int synaptics_rmi4_f12_abs_report(struct synaptics_rmi4_data *rmi4_data,
 						ABS_MT_POSITION_X, x);
 				input_report_abs(rmi4_data->input_dev,
 						ABS_MT_POSITION_Y, 1919);
+#ifdef REPORT_2D_Z
+                input_report_abs(rmi4_data->input_dev,
+                        ABS_MT_PRESSURE, z);
+#endif
 #ifdef REPORT_2D_W
 				input_report_abs(rmi4_data->input_dev,
 						ABS_MT_TOUCH_MAJOR, max(wx, wy));
@@ -2888,6 +2899,10 @@ static int synaptics_rmi4_f12_abs_report(struct synaptics_rmi4_data *rmi4_data,
 					ABS_MT_POSITION_X, x);
 			input_report_abs(rmi4_data->input_dev,
 					ABS_MT_POSITION_Y, y);
+#ifdef REPORT_2D_Z
+            input_report_abs(rmi4_data->input_dev,
+                    ABS_MT_PRESSURE, z);
+#endif
 #ifdef REPORT_2D_W
 			input_report_abs(rmi4_data->input_dev,
 					ABS_MT_TOUCH_MAJOR, max(wx, wy));
@@ -4170,6 +4185,10 @@ static void synaptics_rmi4_set_params(struct synaptics_rmi4_data *rmi4_data)
 	input_set_abs_params(rmi4_data->input_dev,
 			ABS_MT_POSITION_Y, rmi4_data->snap_top,
 			rmi4_data->sensor_max_y-rmi4_data->virtual_key_height-rmi4_data->snap_bottom, 0, 0);
+#ifdef REPORT_2D_Z
+    input_set_abs_params(rmi4_data->input_dev,
+            ABS_MT_PRESSURE, 0, 255, 0, 0);
+#endif
 #ifdef REPORT_2D_W
 	input_set_abs_params(rmi4_data->input_dev,
 			ABS_MT_TOUCH_MAJOR, 0,
