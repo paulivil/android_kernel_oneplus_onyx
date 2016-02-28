@@ -131,7 +131,8 @@ struct test_header {
 // carlo@oneplus.net 2015-05-25, begin.
 #ifdef VENDOR_EDIT
 #define KEY_DOUBLE_TAP          KEY_POWER // 249 double tap to wake
-#define KEY_GESTURE_CIRCLE      250 // draw circle to lunch camera
+#define KEY_GESTURE_DOWN_V      249 // draw ^ to do undefined action
+#define KEY_GESTURE_CIRCLE      250 // draw circle to launch camera
 #define KEY_GESTURE_TWO_SWIPE	251 // swipe two finger vertically to play/pause
 #define KEY_GESTURE_V           252 // draw v to toggle flashlight
 #define KEY_GESTURE_LEFT_V      253 // draw left arrow for previous track
@@ -1509,7 +1510,7 @@ static void gesture_judge(struct synaptics_ts_data *ts)
 			keyCode = KEY_GESTURE_V;
 			break;
 		case DownVee:
-			keyCode = KEY_GESTURE_V;
+            keyCode = KEY_GESTURE_DOWN_V;
 			break;
 		case LeftVee:
 			keyCode = KEY_GESTURE_RIGHT_V;
@@ -1546,6 +1547,7 @@ static void gesture_judge(struct synaptics_ts_data *ts)
 	synaptics_get_coordinate_point(ts);
 	if((gesture == DouTap && DouTap_gesture)||(gesture == RightVee && RightVee_gesture)\
         ||(gesture == LeftVee && LeftVee_gesture)||(gesture == UpVee && UpVee_gesture)\
+        ||(gesture == DownVee && DownVee_gesture)\
         ||(gesture == Circle && Circle_gesture)||(gesture == DouSwip && DouSwip_gesture)){
         gesture_upload = gesture;
 		input_report_key(ts->input_dev, keyCode, 1);
@@ -2106,11 +2108,12 @@ static int tp_double_write_func(struct file *file, const char __user *buffer, si
        TPD_ERR("%s val:%x \n", __func__, buf[0]);
 	UpVee_gesture = (buf[0] & BIT0)?1:0; //"V"
 	DouSwip_gesture = (buf[0] & BIT1)?1:0;//"||"
+    DownVee_gesture = (buf[0] & BIT2)?1:0;//"^"
 	LeftVee_gesture = (buf[0] & BIT3)?1:0; //">"
 	RightVee_gesture = (buf[0] & BIT4)?1:0;//"<"
 	Circle_gesture = (buf[0] & BIT6)?1:0; //"O"
 	DouTap_gesture = (buf[0] & BIT7)?1:0; //double tap
-	if(DouTap_gesture||Circle_gesture||UpVee_gesture||LeftVee_gesture\
+    if(DouTap_gesture||Circle_gesture||UpVee_gesture||DownVee_gesture||LeftVee_gesture\
         ||RightVee_gesture||DouSwip_gesture)
 	{
 		atomic_set(&double_enable, 1);
@@ -3835,7 +3838,7 @@ static ssize_t double_tap_enable_write_func(struct file *file, const char __user
 	sscanf(buf, "%d", &ret);
 
 	DouTap_gesture = ret;
-	if (DouTap_gesture || Circle_gesture || UpVee_gesture ||
+    if (DouTap_gesture || Circle_gesture || UpVee_gesture || DownVee_gesture ||
                 (LeftVee_gesture && RightVee_gesture && DouSwip_gesture))
 	{
 		ts->double_enable = 1;
@@ -3866,7 +3869,7 @@ static ssize_t camera_enable_write_func(struct file *file, const char __user *bu
 	sscanf(buf, "%d", &ret);
 
 	Circle_gesture = ret;
-	if (DouTap_gesture || Circle_gesture || UpVee_gesture ||
+    if (DouTap_gesture || Circle_gesture || UpVee_gesture || DownVee_gesture ||
                 (LeftVee_gesture && RightVee_gesture && DouSwip_gesture))
 	{
 		ts->double_enable = 1;
@@ -3899,7 +3902,7 @@ static ssize_t music_enable_write_func(struct file *file, const char __user *buf
 	DouSwip_gesture = ret;
 	LeftVee_gesture = ret;
 	RightVee_gesture = ret;
-	if (DouTap_gesture || Circle_gesture || UpVee_gesture ||
+    if (DouTap_gesture || Circle_gesture || UpVee_gesture || DownVee_gesture ||
 				(LeftVee_gesture && RightVee_gesture && DouSwip_gesture))
 	{
 		ts->double_enable = 1;
@@ -3930,7 +3933,7 @@ static ssize_t flashlight_enable_write_func(struct file *file, const char __user
 	sscanf(buf, "%d", &ret);
 
 	UpVee_gesture = ret;
-	if (DouTap_gesture || Circle_gesture || UpVee_gesture ||
+    if (DouTap_gesture || Circle_gesture || UpVee_gesture || DownVee_gesture ||
                 (LeftVee_gesture && RightVee_gesture && DouSwip_gesture))
 	{
 		ts->double_enable = 1;
@@ -3942,6 +3945,37 @@ static ssize_t flashlight_enable_write_func(struct file *file, const char __user
 		atomic_set(&double_enable, 0);
 	}
 	return count;
+}
+
+static ssize_t voicecall_enable_read_func(struct file *file, char __user *user_buf, size_t count, loff_t *ppos)
+{
+    int ret = 0;
+    char page[PAGESIZE];
+    ret = sprintf(page, "%d\n", DownVee_gesture);
+    ret = simple_read_from_buffer(user_buf, count, ppos, page, strlen(page));
+    return ret;
+}
+
+static ssize_t voicecall_enable_write_func(struct file *file, const char __user *buf, size_t count, loff_t *ppos)
+{
+    int ret = 0;
+    struct synaptics_ts_data *ts = ts_g;
+
+    sscanf(buf, "%d", &ret);
+
+    DownVee_gesture = ret;
+    if (DouTap_gesture || Circle_gesture || UpVee_gesture || DownVee_gesture ||
+                (LeftVee_gesture && RightVee_gesture && DouSwip_gesture))
+    {
+        ts->double_enable = 1;
+        atomic_set(&double_enable, 1);
+    }
+    else
+    {
+        ts->double_enable = 0;
+        atomic_set(&double_enable, 0);
+    }
+    return count;
 }
 
 // chenggang.li@BSP.TP modified for oppo 2014-08-08 create node
@@ -4011,6 +4045,12 @@ static const struct file_operations flashlight_enable_proc_fops = {
 	.owner = THIS_MODULE,
 };
 
+static const struct file_operations voicecall_enable_proc_fops = {
+    .write = voicecall_enable_write_func,
+    .read =  voicecall_enable_read_func,
+    .open = simple_open,
+    .owner = THIS_MODULE,
+};
 
 //wangwenxue@BSP add for change baseline_test to "proc\touchpanel\baseline_test"  begin
 static const struct file_operations tp_baseline_test_proc_fops = {
@@ -4109,6 +4149,12 @@ static int init_synaptics_proc(void)
 		ret = -ENOMEM;
 		printk(KERN_INFO"init_synaptics_proc: Couldn't create proc entry\n");
 	}
+
+    prEntry_tmp = proc_create("voicecall_enable", 0666, prEntry_tp, &voicecall_enable_proc_fops);
+    if(prEntry_tmp == NULL){
+        ret = -ENOMEM;
+        printk(KERN_INFO"init_synaptics_proc: Couldn't create proc entry\n");
+    }
 
 	prEntry_tmp = proc_create("keypad_enable", 0666, prEntry_tp, &keypad_enable_proc_fops);
 	if(prEntry_tmp == NULL)
