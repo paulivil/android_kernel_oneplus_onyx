@@ -140,6 +140,15 @@ struct test_header {
 #endif
 // carlo@oneplus.net 2015-05-25, end.
 
+#define MSC_GESTURE_DOUBLE_TAP  4
+#define MSC_GESTURE_V           5
+#define MSC_GESTURE_CIRCLE      6
+#define MSC_GESTURE_DOWN_V      7
+#define MSC_GESTURE_TWO_SWIPE   8
+#define MSC_GESTURE_RIGHT_V     9
+#define MSC_GESTURE_LEFT_V      10
+
+
 #define BIT0 (0x1 << 0)
 #define BIT1 (0x1 << 1)
 #define BIT2 (0x1 << 2)
@@ -1504,25 +1513,25 @@ static void gesture_judge(struct synaptics_ts_data *ts)
 	// Get key code based on registered gesture.
 	switch (gesture) {
 		case DouTap:
-			keyCode = KEY_DOUBLE_TAP;
+            keyCode = MSC_GESTURE_DOUBLE_TAP; // KEY_DOUBLE_TAP;
 			break;
 		case UpVee:
-			keyCode = KEY_GESTURE_V;
+            keyCode = MSC_GESTURE_V; // KEY_GESTURE_V;
 			break;
 		case DownVee:
-            keyCode = KEY_GESTURE_DOWN_V;
+            keyCode = MSC_GESTURE_DOWN_V; // KEY_GESTURE_DOWN_V;
 			break;
 		case LeftVee:
-			keyCode = KEY_GESTURE_RIGHT_V;
+            keyCode = MSC_GESTURE_RIGHT_V; // KEY_GESTURE_RIGHT_V;
 			break;
 		case RightVee:
-			keyCode = KEY_GESTURE_LEFT_V;
+            keyCode = MSC_GESTURE_LEFT_V; // KEY_GESTURE_LEFT_V;
 			break;
 		case Circle:
-			keyCode = KEY_GESTURE_CIRCLE;
+            keyCode = MSC_GESTURE_CIRCLE; // KEY_GESTURE_CIRCLE;
 			break;
 		case DouSwip:
-			keyCode = KEY_GESTURE_TWO_SWIPE;
+            keyCode = MSC_GESTURE_TWO_SWIPE; // KEY_GESTURE_TWO_SWIPE;
 			break;
 		default:
 			break;
@@ -1550,10 +1559,12 @@ static void gesture_judge(struct synaptics_ts_data *ts)
         ||(gesture == DownVee && DownVee_gesture)\
         ||(gesture == Circle && Circle_gesture)||(gesture == DouSwip && DouSwip_gesture)){
         gesture_upload = gesture;
-		input_report_key(ts->input_dev, keyCode, 1);
-		input_sync(ts->input_dev);
-		input_report_key(ts->input_dev, keyCode, 0);
-		input_sync(ts->input_dev);
+        input_event(ts->input_dev, EV_MSC, MSC_GESTURE, keyCode);
+        //input_report_key(ts->input_dev, keyCode, 1);
+	input_sync(ts->input_dev);
+        //input_event(ts->input_dev, EV_MSC, MSC_GESTURE, 0);
+        //input_report_key(ts->input_dev, keyCode, 0);
+	//input_sync(ts->input_dev);
     }else{
 		//if(is_project(OPPO_14005) || is_project(OPPO_15011)){
 			ret = i2c_smbus_read_i2c_block_data( ts->client, F12_2D_CTRL20, 3, &(reportbuf[0x0]) );
@@ -3489,6 +3500,9 @@ static int	synaptics_input_init(struct synaptics_ts_data *ts)
 	set_bit(EV_SYN, ts->input_dev->evbit);
 	set_bit(EV_ABS, ts->input_dev->evbit);
 	set_bit(EV_KEY, ts->input_dev->evbit);
+	set_bit(EV_MSC, ts->input_dev->evbit);
+	//set_bit(MSC_GESTURE, ts->input_dev->mscbit);
+	ts->input_dev->mscbit[0] = BIT_MASK(MSC_GESTURE);
 	set_bit(ABS_MT_TOUCH_MAJOR, ts->input_dev->absbit);
 	set_bit(ABS_MT_WIDTH_MAJOR,ts->input_dev->absbit);
 	set_bit(ABS_MT_POSITION_X, ts->input_dev->absbit);
@@ -3496,16 +3510,16 @@ static int	synaptics_input_init(struct synaptics_ts_data *ts)
 	set_bit(INPUT_PROP_DIRECT, ts->input_dev->propbit);
 
 #ifdef SUPPORT_GESTURE
-	set_bit(KEY_F4 , ts->input_dev->keybit);//doulbe-tap resume
-	set_bit(KEY_DOUBLE_TAP, ts->input_dev->keybit);
-	set_bit(KEY_GESTURE_CIRCLE, ts->input_dev->keybit);
-	set_bit(KEY_GESTURE_V, ts->input_dev->keybit);
-	set_bit(KEY_GESTURE_LEFT_V, ts->input_dev->keybit);
-	set_bit(KEY_GESTURE_RIGHT_V, ts->input_dev->keybit);
-	set_bit(KEY_GESTURE_TWO_SWIPE, ts->input_dev->keybit);
-		set_bit(KEY_MENU , ts->input_dev->keybit);
-		set_bit(KEY_HOMEPAGE , ts->input_dev->keybit);
-		set_bit(KEY_BACK , ts->input_dev->keybit);
+    set_bit(KEY_F4 , ts->input_dev->keybit);//doulbe-tap resume
+    set_bit(KEY_DOUBLE_TAP, ts->input_dev->keybit);
+//	set_bit(KEY_GESTURE_CIRCLE, ts->input_dev->keybit);
+//	set_bit(KEY_GESTURE_V, ts->input_dev->keybit);
+//	set_bit(KEY_GESTURE_LEFT_V, ts->input_dev->keybit);
+//	set_bit(KEY_GESTURE_RIGHT_V, ts->input_dev->keybit);
+//	set_bit(KEY_GESTURE_TWO_SWIPE, ts->input_dev->keybit);
+        set_bit(KEY_MENU , ts->input_dev->keybit);
+        set_bit(KEY_HOMEPAGE , ts->input_dev->keybit);
+        set_bit(KEY_BACK , ts->input_dev->keybit);
 #endif
 
 	/* For multi touch */
@@ -3947,7 +3961,7 @@ static ssize_t flashlight_enable_write_func(struct file *file, const char __user
 	return count;
 }
 
-static ssize_t voicecall_enable_read_func(struct file *file, char __user *user_buf, size_t count, loff_t *ppos)
+static ssize_t downvee_enable_read_func(struct file *file, char __user *user_buf, size_t count, loff_t *ppos)
 {
     int ret = 0;
     char page[PAGESIZE];
@@ -3956,7 +3970,7 @@ static ssize_t voicecall_enable_read_func(struct file *file, char __user *user_b
     return ret;
 }
 
-static ssize_t voicecall_enable_write_func(struct file *file, const char __user *buf, size_t count, loff_t *ppos)
+static ssize_t downvee_enable_write_func(struct file *file, const char __user *buf, size_t count, loff_t *ppos)
 {
     int ret = 0;
     struct synaptics_ts_data *ts = ts_g;
@@ -4045,9 +4059,9 @@ static const struct file_operations flashlight_enable_proc_fops = {
 	.owner = THIS_MODULE,
 };
 
-static const struct file_operations voicecall_enable_proc_fops = {
-    .write = voicecall_enable_write_func,
-    .read =  voicecall_enable_read_func,
+static const struct file_operations downvee_enable_proc_fops = {
+    .write = downvee_enable_write_func,
+    .read =  downvee_enable_read_func,
     .open = simple_open,
     .owner = THIS_MODULE,
 };
@@ -4150,7 +4164,7 @@ static int init_synaptics_proc(void)
 		printk(KERN_INFO"init_synaptics_proc: Couldn't create proc entry\n");
 	}
 
-    prEntry_tmp = proc_create("voicecall_enable", 0666, prEntry_tp, &voicecall_enable_proc_fops);
+    prEntry_tmp = proc_create("downvee_enable", 0666, prEntry_tp, &downvee_enable_proc_fops);
     if(prEntry_tmp == NULL){
         ret = -ENOMEM;
         printk(KERN_INFO"init_synaptics_proc: Couldn't create proc entry\n");
@@ -5360,3 +5374,6 @@ module_exit(tpd_driver_exit);
 
 MODULE_DESCRIPTION("Synaptics S3203 Touchscreen Driver");
 MODULE_LICENSE("GPL");
+
+
+
