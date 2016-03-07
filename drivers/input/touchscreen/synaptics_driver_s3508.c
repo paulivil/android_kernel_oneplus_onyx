@@ -4164,7 +4164,7 @@ static int init_synaptics_proc(void)
 		printk(KERN_INFO"init_synaptics_proc: Couldn't create proc entry\n");
 	}
 
-    prEntry_tmp = proc_create("downvee_enable", 0666, prEntry_tp, &downvee_enable_proc_fops);
+    prEntry_tmp = proc_create("voicecall_enable", 0666, prEntry_tp, &downvee_enable_proc_fops);
     if(prEntry_tmp == NULL){
         ret = -ENOMEM;
         printk(KERN_INFO"init_synaptics_proc: Couldn't create proc entry\n");
