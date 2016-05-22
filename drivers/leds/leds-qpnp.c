@@ -2412,7 +2412,6 @@ static ssize_t blink_store(struct device *dev,
 	if (ret)
 		return ret;
 	led = container_of(led_cdev, struct qpnp_led_data, cdev);
-	led->cdev.brightness = blinking ? led->cdev.max_brightness : 0;
 
 	switch (led->id) {
 	case QPNP_ID_LED_MPP:
