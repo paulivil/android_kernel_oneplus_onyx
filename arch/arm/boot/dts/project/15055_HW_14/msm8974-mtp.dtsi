@@ -295,6 +295,7 @@
 		qcom,key-codes = <158 139 102 217>;
 	};
 
+/* Remove by kimmoli
 	i2c@f9967000 {
 		isa1200@48 {
 			status = "okay";
@@ -317,6 +318,7 @@
 			};
 		};
 	};
+*/
 	
 /*OPPO ranfei add for fpc1021*/
 	spi@f9968000 {
