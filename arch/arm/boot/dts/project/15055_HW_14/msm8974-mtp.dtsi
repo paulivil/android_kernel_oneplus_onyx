@@ -393,7 +393,7 @@
 
 		camera_focus {
 			label = "camera_focus";
-			gpios = <&pm8941_gpios 4 0x1>;
+			#gpios = <&pm8941_gpios 4 0x1>;
 			linux,input-type = <1>;
 			linux,code = <0x210>;
 			gpio-key,wakeup;
