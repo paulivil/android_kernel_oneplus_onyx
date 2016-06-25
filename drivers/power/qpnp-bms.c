@@ -2039,6 +2039,10 @@ static int report_cc_based_soc(struct qpnp_bms_chip *chip)
 		soc_change = 0;
 		chip->last_soc_change_sec = last_change_sec;
 		//pr_debug("chip->battery_status == POWER_SUPPLY_STATUS_FULL Reported SOC = 100\n");
+                if (chip->calculated_soc != 100) {
+                        pr_info("seems battery_status is stuck. forcing to POWER_SUPPLY_STATUS_UNKNOWN.");
+                        chip->battery_status = POWER_SUPPLY_STATUS_UNKNOWN;
+                }
 	}
 
 
