@@ -50,7 +50,7 @@
 			qcom,idx-len = <11>;
 
 				qcom,lut-flags = <0x1f>;
-				qcom,ramp-step-ms = <100>;
+				qcom,ramp-step-ms = <5>;
 				qcom,pause-lo = <2000>;
 				qcom,pause-hi = <1000>;
 			/*linux,default-trigger =
@@ -75,7 +75,7 @@
 
 
 			qcom,lut-flags = <0x1f>;
-			qcom,ramp-step-ms = <100>;
+			qcom,ramp-step-ms = <5>;
 			qcom,pause-lo = <2000>;
 			qcom,pause-hi = <1000>;
 
@@ -97,7 +97,7 @@
 				qcom,idx-len = <11>;
 
 				qcom,lut-flags = <0x1f>;
-				qcom,ramp-step-ms = <100>;
+				qcom,ramp-step-ms = <5>;
 				qcom,pause-lo = <2000>;
 				qcom,pause-hi = <1000>;
 
