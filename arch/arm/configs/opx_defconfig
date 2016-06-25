@@ -2996,7 +2996,8 @@ CONFIG_USB_STORAGE_ENE_UB6250=y
 #
 # USB port drivers
 #
-# CONFIG_USB_SERIAL is not set
+CONFIG_USB_SERIAL=y
+CONFIG_USB_SERIAL_FTDI_SIO=y
 
 #
 # USB Miscellaneous drivers
