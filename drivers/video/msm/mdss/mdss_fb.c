@@ -1194,10 +1194,14 @@ void mdss_fb_update_backlight(struct msm_fb_data_type *mfd)
 	u32 temp;
 	bool bl_notify = false;
 
+	if (!mfd->unset_bl_level)
+		return;
+
 	mutex_lock(&mfd->bl_lock);
-	if (mfd->unset_bl_level && !mfd->bl_updated) {
+	if (!mfd->bl_updated) {
 		pdata = dev_get_platdata(&mfd->pdev->dev);
 		if ((pdata) && (pdata->set_backlight)) {
+			pr_info("%s: Updating brightness to last unset value %d", __func__, mfd->unset_bl_level);
 			mfd->bl_level = mfd->unset_bl_level;
 			temp = mfd->bl_level;
 			if (mfd->mdp.ad_calc_bl)
@@ -1245,7 +1249,7 @@ static int mdss_fb_blank_sub(int blank_mode, struct fb_info *info,
 		}
 
 		mutex_lock(&mfd->bl_lock);
-		if (!mfd->bl_updated) {
+		if (!mfd->bl_updated && !mfd->panel_info->cont_splash_enabled) {
 			mfd->bl_updated = 1;
 			mdss_fb_set_backlight(mfd, mfd->bl_level_prev_scaled);
 		}
