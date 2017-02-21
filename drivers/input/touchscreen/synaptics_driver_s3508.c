@@ -1750,8 +1750,11 @@ static void int_touch_s3508(struct synaptics_ts_data *ts,bool insert_flag)
 		}
 	}else{
 #ifdef TYPE_B_PROTOCOL
-		input_mt_slot(ts->input_dev, i);
-		input_mt_report_slot_state(ts->input_dev,MT_TOOL_FINGER, 0);
+		for( i = 0; i < ts->max_num; i++ ) /* Just release all slots if nothing is pressed */
+		{
+			input_mt_slot(ts->input_dev, i);
+			input_mt_report_slot_state(ts->input_dev,MT_TOOL_FINGER, 0);
+		}
 #endif
 		tpd_up(ts, points.raw_x, points.raw_y, points.x, points.y, points.z);
 	}
